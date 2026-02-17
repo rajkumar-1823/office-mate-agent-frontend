@@ -1,0 +1,8 @@
+
+{
+  "name": "AI Office Bot",
+  "description": "An AI-powered office assistant that controls electronic devices within a 2D office layout using voice commands. Interact with the bot to turn lights, ACs, and other devices on or off.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
