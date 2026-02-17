@@ -9,7 +9,7 @@ interface ManageOfficeProps {
   refreshLayout: () => void;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = process.env.BACKEND_URL as string;
 
 // ─── Shared Styles ──────────────────────────────────────────
 const inputClass = "w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all placeholder:text-slate-500";

@@ -8,6 +8,7 @@ import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { encode, decode, decodeAudioData } from './utils/audioUtils';
 
+const BACKEND_URL = process.env.BACKEND_URL as string;
 // Helper to generate URL-friendly keys from names
 const generateKey = (name: string): string => {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -49,7 +50,7 @@ const App: React.FC = () => {
 
   const fetchOfficeLayout = useCallback(async () => {
       try {
-          const response = await fetch('http://localhost:3000/layout');
+          const response = await fetch(BACKEND_URL + '/layout');
           if (!response.ok) {
               throw new Error('Failed to fetch layout from the backend.');
           }
@@ -183,7 +184,7 @@ const App: React.FC = () => {
                                     console.log('[ToolCall] controlDevice args:', args);
                                     const { deviceIds, state } = args;
                                     if (deviceIds && Array.isArray(deviceIds) && deviceIds.length > 0 && typeof state === 'string') {
-                                        const res = await fetch('http://localhost:3000/electronics/state', {
+                                        const res = await fetch(BACKEND_URL + '/electronics/state', {
                                             method: 'PATCH',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ electronicsIds: deviceIds, state: state.toUpperCase() }),
@@ -198,7 +199,7 @@ const App: React.FC = () => {
                                     console.log('[ToolCall] createRoom args:', args);
                                     const { roomName } = args;
                                     const roomKey = generateKey(roomName);
-                                    const res = await fetch('http://localhost:3000/rooms', {
+                                    const res = await fetch(BACKEND_URL + '/rooms', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ room_name: roomName, room_key: roomKey }),
@@ -210,7 +211,7 @@ const App: React.FC = () => {
                                     console.log('[ToolCall] createElectronics args:', args);
                                     const { electronicsName, type } = args;
                                     const electronicsKey = generateKey(electronicsName);
-                                    const res = await fetch('http://localhost:3000/electronics', {
+                                    const res = await fetch(BACKEND_URL + '/electronics', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ electronics_name: electronicsName, electronics_key: electronicsKey, type: type.toUpperCase() }),
@@ -224,7 +225,7 @@ const App: React.FC = () => {
                                     // Look up room_id from layout
                                     const room = officeLayout.find(r => r.room_name.toLowerCase() === roomName.toLowerCase());
                                     // Look up electronics_id from all electronics
-                                    const allElectronicsRes = await fetch('http://localhost:3000/electronics');
+                                    const allElectronicsRes = await fetch(BACKEND_URL + '/electronics');
                                     const allElectronics = await allElectronicsRes.json();
                                     const electronic = allElectronics.find((e: any) => e.electronics_name.toLowerCase() === electronicsName.toLowerCase());
                                     
@@ -233,7 +234,7 @@ const App: React.FC = () => {
                                     } else if (!electronic) {
                                         sendResponse(fc.id!, { error: `Electronic "${electronicsName}" not found.` });
                                     } else {
-                                        const res = await fetch('http://localhost:3000/room-electronics-map', {
+                                        const res = await fetch(BACKEND_URL + '/room-electronics-map', {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ room_id: room.room_id, electronics_id: electronic.electronics_id }),
