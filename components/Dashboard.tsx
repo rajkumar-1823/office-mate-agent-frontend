@@ -2,9 +2,11 @@ import React from 'react';
 import { OfficeLayout } from './OfficeLayout';
 import { ControlPanel } from './ControlPanel';
 import type { OfficeLayout as OfficeLayoutType } from '../types';
+import { Loader2 } from 'lucide-react';
 
 interface DashboardProps {
   officeLayout: OfficeLayoutType;
+  isLayoutLoading: boolean;
   isSessionActive: boolean;
   isProcessing: boolean;
   isBotSpeaking: boolean;
@@ -17,6 +19,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({
   officeLayout,
+  isLayoutLoading,
   isSessionActive,
   isProcessing,
   isBotSpeaking,
@@ -27,34 +30,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onStopSession,
 }) => {
   return (
-    <div className="flex flex-col xl:flex-row gap-6 h-full">
-      <div className="flex-grow flex flex-col gap-6 h-full min-h-0">
-        <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 shadow-xl shadow-cyan-900/5 flex flex-col h-full backdrop-blur-sm overflow-hidden">
-          <div className="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4 flex-shrink-0">
-               <h2 className="text-xl font-semibold text-slate-100">Live Office Map</h2>
-               <div className="flex gap-2">
-                   <span className="flex items-center gap-2 text-xs font-medium text-slate-400 bg-slate-800/80 px-2 py-1 rounded-full border border-slate-700/50">
-                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div> Online
-                   </span>
-               </div>
+    // Stack on mobile, side-by-side on lg+
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
+
+      {/* ── Office Map ─────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden min-h-[320px] lg:min-h-0">
+          <div className="flex justify-between items-center px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-800">Live Office Map</h2>
+              <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Real-time device status</p>
+            </div>
+            <span className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] inline-block" />
+              Online
+            </span>
           </div>
-          <div className="flex-grow overflow-y-auto">
-             <OfficeLayout layout={officeLayout} />
+
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+            {isLayoutLoading ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
+                <Loader2 size={32} className="animate-spin text-blue-500" />
+                <p className="text-sm font-medium">Loading office layout…</p>
+              </div>
+            ) : (
+              <OfficeLayout layout={officeLayout} />
+            )}
           </div>
         </div>
       </div>
-      
-      <div className="xl:w-96 flex-shrink-0 flex flex-col h-full min-h-0">
-         <ControlPanel
-            isSessionActive={isSessionActive}
-            isProcessing={isProcessing}
-            isBotSpeaking={isBotSpeaking}
-            statusText={statusText}
-            userTranscription={userTranscription}
-            botTranscription={botTranscription}
-            onStart={onStartSession}
-            onStop={onStopSession}
-          />
+
+      {/* ── Control Panel ──────────────────────────────────── */}
+      {/* Full width on mobile, fixed 384px on lg+ */}
+      <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 flex flex-col min-h-0">
+        <ControlPanel
+          isSessionActive={isSessionActive}
+          isProcessing={isProcessing}
+          isBotSpeaking={isBotSpeaking}
+          statusText={statusText}
+          userTranscription={userTranscription}
+          botTranscription={botTranscription}
+          onStart={onStartSession}
+          onStop={onStopSession}
+        />
       </div>
     </div>
   );

@@ -32,11 +32,13 @@ const App: React.FC = () => {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isBotSpeaking, setIsBotSpeaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLayoutLoading, setIsLayoutLoading] = useState(true);
   const [statusText, setStatusText] = useState("Click 'Start Session' to begin");
   const [userTranscription, setUserTranscription] = useState('');
   const [botTranscription, setBotTranscription] = useState('');
   const [systemInstruction, setSystemInstruction] = useState('');
   const [currentView, setCurrentView] = useState<'dashboard' | 'manage'>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Session & audio refs
   const sessionRef = useRef<Session | null>(null);
@@ -50,6 +52,7 @@ const App: React.FC = () => {
 
   const fetchOfficeLayout = useCallback(async () => {
       try {
+          setIsLayoutLoading(true);
           const response = await fetch(BACKEND_URL + '/layout');
           if (!response.ok) {
               throw new Error('Failed to fetch layout from the backend.');
@@ -60,6 +63,8 @@ const App: React.FC = () => {
       } catch (error) {
           console.error("Error fetching office layout:", error);
           setStatusText("Error: Could not load office layout data.");
+      } finally {
+          setIsLayoutLoading(false);
       }
   }, []);
 
@@ -325,30 +330,62 @@ const App: React.FC = () => {
   }, [handleStopSession, systemInstruction, fetchOfficeLayout, officeLayout]);
 
   return (
-    <div className="flex h-screen bg-slate-950 font-sans text-slate-100 overflow-hidden selection:bg-cyan-500/30">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-              {currentView === 'dashboard' ? (
-                  <Dashboard 
-                    officeLayout={officeLayout}
-                    isSessionActive={isSessionActive}
-                    isProcessing={isProcessing}
-                    isBotSpeaking={isBotSpeaking}
-                    statusText={statusText}
-                    userTranscription={userTranscription}
-                    botTranscription={botTranscription}
-                    onStartSession={handleStartSession}
-                    onStopSession={handleStopSession}
-                  />
-              ) : (
-                  <ManagementPanel refreshLayout={fetchOfficeLayout} />
-              )}
-          </div>
+    <div className="flex h-screen bg-gray-50 font-sans text-slate-800 overflow-hidden selection:bg-blue-500/20">
+
+      {/* Sidebar — relative on lg+ (pinned), fixed drawer on mobile */}
+      <Sidebar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(o => !o)}
+      />
+
+      {/* Main content */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+
+        {/* Sticky top header — hamburger hidden on lg+ (sidebar always visible) */}
+        <header className="flex-shrink-0 flex items-center gap-3 px-4 sm:px-6 py-3 bg-white border-b border-gray-200 shadow-sm z-10">
+          {/* Hamburger — only on mobile */}
+          <button
+            onClick={() => setIsSidebarOpen(o => !o)}
+            className="lg:hidden cursor-pointer p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 transition-all duration-200 active:scale-90 shadow-sm"
+            aria-label="Toggle sidebar"
+          >
+            <div className="w-5 h-4 flex flex-col justify-between">
+              <span className={`block h-0.5 bg-current rounded-full transition-all duration-300 ${isSidebarOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
+              <span className={`block h-0.5 bg-current rounded-full transition-all duration-300 ${isSidebarOpen ? 'opacity-0 scale-x-0' : ''}`} />
+              <span className={`block h-0.5 bg-current rounded-full transition-all duration-300 ${isSidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
+            </div>
+          </button>
+
+          <h2 className="text-sm font-semibold text-slate-700">
+            {currentView === 'dashboard' ? 'Dashboard' : 'Manage Office'}
+          </h2>
+        </header>
+
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6">
+          {currentView === 'dashboard' ? (
+            <Dashboard
+              officeLayout={officeLayout}
+              isLayoutLoading={isLayoutLoading}
+              isSessionActive={isSessionActive}
+              isProcessing={isProcessing}
+              isBotSpeaking={isBotSpeaking}
+              statusText={statusText}
+              userTranscription={userTranscription}
+              botTranscription={botTranscription}
+              onStartSession={handleStartSession}
+              onStopSession={handleStopSession}
+            />
+          ) : (
+            <ManagementPanel refreshLayout={fetchOfficeLayout} />
+          )}
+        </div>
       </main>
     </div>
   );
+
 };
 
 export default App;
